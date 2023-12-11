@@ -563,7 +563,11 @@ namespace ScraperPuppet
 			{
 				sbAlQuranXml.Append($"\t<surah id=\"surah_{surahData.SurahID}\">\n");
 				sbAlQuranXml.Append($"\t\t<namearabic>\n\t\t\t{surahData.SurahNameAr}\n\t\t</namearabic>\n");
-				sbAlQuranXml.Append($"\t\t</ayaat>\n");
+				sbAlQuranXml.Append($"\t\t<nameenglish>\n\t\t\t{surahData.SurahNameEn}\n\t\t</nameenglish>\n");
+				sbAlQuranXml.Append($"\t\t<location>\n\t\t\t{surahData.SurahLocation}\n\t\t</location>\n");
+				sbAlQuranXml.Append($"\t\t<revelationid>\n\t\t\t{surahData.RevelationID}\n\t\t</revelationid>\n");
+				sbAlQuranXml.Append($"\t\t<rukus>\n\t\t\t{surahData.RukuCount}\n\t\t</rukus>\n");
+				sbAlQuranXml.Append($"\t\t<ayaas>\n\t\t\t{surahData.AyaCount}\n\t\t</ayaas>\n");
 				sbAlQuranXml.Append(surahData.Ayas[0].IntroXml);
 				sbAlQuranXml.Append($"\t\t<ayaat count=\"{surahData.AyaCount}\">\n");
 
