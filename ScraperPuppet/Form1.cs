@@ -52,47 +52,38 @@ namespace ScraperPuppet
 
 			sw.Start();
 			//cm();
-			Console.WriteLine(startMemory.ToString());
-			gm();
-			Console.WriteLine(startMemory.ToString());
-			//startMemory = GC.GetTotalMemory(true);
+			//gm();
+			//Console.WriteLine(startMemory.ToString());
 			//sSuraNames = await GetSuraNamesPuppetAsync(fullUrl);
 			//sSuraNames = await GetSuraNamesAsync(fullUrl);
 			sSuraNames = GetSuraNames(httpClient, fullUrl);
-			//sSuraNames = null;
-			gm();
-
+			//gm();
+			//await DisplayPage();
 			//await DisplayPage(fullUrl);
-			foreach (string item in sSuraNames)
-			{
-				Debug.WriteLine(item);
-				//await GetSurah(2, sSuraNames[2]);
-			}
-			gm();
-			for (int i = 113; i < sSuraNames.Count; i++)
+			//await DisplayPageAsync(fullUrl);
+
+			//foreach (string item in sSuraNames)
+			//{
+			//	Debug.WriteLine(item);
+			//}
+			//GetSurah(httpClient, 106, sSuraNames[110], false);
+			//string sAya = await GetAyaDataPuppetAsync(sSuraNames[2], 10);
+			//AyaData sAya = await GetAyaDataAsync(sSuraNames[2], 10);
+			//gm();
+			for (int i = 1; i < sSuraNames.Count; i++)
 			{
 				//await GetSurahAsync(httpClient, i, sSuraNames[i]);
 				GetSurah(httpClient, i, sSuraNames[i], true);
 			}
-			//GetSurah(httpClient, 106, sSuraNames[110], false);
-			//await DisplayPageAsync(fullUrl);
-			//string sAya = await GetAyaDataPuppetAsync(sSuraNames[2], 10);
-			//AyaData sAya = await GetAyaDataAsync(sSuraNames[2], 10);
-
 			sw.Stop();
-			//await DisplayPage();
-
 			Console.WriteLine(sw.Elapsed);
 			gm();
-			//Debug.WriteLine(sAya);
 		}
 
 		#region Code using Puppeteer Sharp
 
 		private async Task<List<string>> GetSuraNamesPuppetAsync(string url)
 		{
-			//await new BrowserFetcher().DownloadAsync();
-
 			List<string> sSuraNames = new List<string>();
 			var options = new LaunchOptions()
 			{
@@ -257,28 +248,23 @@ namespace ScraperPuppet
 		#endregion
 
 		#region Code using System Http Client
+		#region Async Methods
 
 		public async Task<List<string>> GetSuraNamesAsync(HttpClient client, string url)
 		{
-
 			string response = await CallUrlAsync(client, url);
 			//gm();
 			var sSuraNames = ParseHtml(response);
-			//response = null;
-			//WriteToCsv(linkList);
 			//gm();
 			return sSuraNames;
 		}
 		private static async Task<string> CallUrlAsync(HttpClient client, string fullUrl)
 		{
-			//HttpClient client = new HttpClient();
-
 			ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
 			client.DefaultRequestHeaders.Accept.Clear();
 			var response = client.GetStringAsync(fullUrl);
 			return await response;
 		}
-		private delegate AyaData ayaTaskDelegate(string surahName, int ayaID);
 		private async Task GetSurahAsync(HttpClient client, int surahID, string surahName)
 		{
 			SurahData surahData = new SurahData();
@@ -306,43 +292,30 @@ namespace ScraperPuppet
 			for (int i = 1; i <= surahData.AyaCount; i++)
 			{
 				surahData.Ayas.Add(await GetAyaDataAsync(client, surahData.SurahID, surahName, i));
-				//long endMemory = GC.GetTotalMemory(true);
-				//Debug.WriteLine("No. of bytes from caller = " + (endMemory - startMemory));
-				//Debug.WriteLine("No. of pages from caller = " + (endMemory - startMemory) / 8192);
+				/*
+								surahData.Ayas[surahData.Ayas.Count - 1].sIntro = null;
+								surahData.Ayas[surahData.Ayas.Count - 1].sTafseer = null;
+								surahData.Ayas[surahData.Ayas.Count - 1].TafseerSegments = null;
+								surahData.Ayas[surahData.Ayas.Count - 1].IntroSegments = null;
 
-				surahData.Ayas[surahData.Ayas.Count - 1].sIntro = null;
-				surahData.Ayas[surahData.Ayas.Count - 1].sTafseer = null;
-				surahData.Ayas[surahData.Ayas.Count - 1].TafseerSegments = null;
-				surahData.Ayas[surahData.Ayas.Count - 1].IntroSegments = null;
-
-				surahData.Ayas[surahData.Ayas.Count - 1].Intro = null;
-				surahData.Ayas[surahData.Ayas.Count - 1].IntroSegmentedTag = null;
-				surahData.Ayas[surahData.Ayas.Count - 1].IntroSegmentedText = null;
-				surahData.Ayas[surahData.Ayas.Count - 1].IntroSegmentedXml = null;
-				surahData.Ayas[surahData.Ayas.Count - 1].IntroTag = null;
-				surahData.Ayas[surahData.Ayas.Count - 1].IntroXml = null;
-				surahData.Ayas[surahData.Ayas.Count - 1].Tafseer = null;
-				surahData.Ayas[surahData.Ayas.Count - 1].TafseerSegmentedTag = null;
-				surahData.Ayas[surahData.Ayas.Count - 1].TafseerSegmentedText = null;
-				surahData.Ayas[surahData.Ayas.Count - 1].TafseerSegmentedXml = null;
-				surahData.Ayas[surahData.Ayas.Count - 1].TafseerTag = null;
-				surahData.Ayas[surahData.Ayas.Count - 1].TafseerXml = null;
-				//endMemory = GC.GetTotalMemory(true);
-				//Debug.WriteLine("No. of bytes from caller = " + (endMemory - startMemory));
-				//Debug.WriteLine("No. of pages from caller = " + (endMemory - startMemory) / 8192);
+								surahData.Ayas[surahData.Ayas.Count - 1].Intro = null;
+								surahData.Ayas[surahData.Ayas.Count - 1].IntroSegmentedTag = null;
+								surahData.Ayas[surahData.Ayas.Count - 1].IntroSegmentedText = null;
+								surahData.Ayas[surahData.Ayas.Count - 1].IntroSegmentedXml = null;
+								surahData.Ayas[surahData.Ayas.Count - 1].IntroTag = null;
+								surahData.Ayas[surahData.Ayas.Count - 1].IntroXml = null;
+								surahData.Ayas[surahData.Ayas.Count - 1].Tafseer = null;
+								surahData.Ayas[surahData.Ayas.Count - 1].TafseerSegmentedTag = null;
+								surahData.Ayas[surahData.Ayas.Count - 1].TafseerSegmentedText = null;
+								surahData.Ayas[surahData.Ayas.Count - 1].TafseerSegmentedXml = null;
+								surahData.Ayas[surahData.Ayas.Count - 1].TafseerTag = null;
+								surahData.Ayas[surahData.Ayas.Count - 1].TafseerXml = null;
+				*/
 			}
-			//long endMemory = GC.GetTotalMemory(true);
-			//Debug.WriteLine("No. of bytes from caller = " + (endMemory - startMemory));
-			//Debug.WriteLine("No. of pages from caller = " + (endMemory - startMemory) / 8192);
 
 			//surahData.Ayas = null;
 			//surahData = null;
-			//endMemory = GC.GetTotalMemory(true);
-			//Debug.WriteLine("No. of bytes from caller = " + (endMemory - startMemory));
-			//Debug.WriteLine("No. of pages from caller = " + (endMemory - startMemory) / 8192);
-
 			Console.WriteLine("Completed");
-			surahData = null;
 			#endregion
 
 			#region Asynchronous with Task.WhenAll
@@ -428,61 +401,46 @@ namespace ScraperPuppet
 			return await Task.Run(() => node.InnerText);
 		}
 
+		#endregion
+
 		public List<string> GetSuraNames(HttpClient client, string url)
 		{
-
 			string response = CallUrl(client, url);
 			//gm();
 			var sSuraNames = ParseHtml(response);
-			//response = null;
-			//WriteToCsv(linkList);
-			gm();
+			//gm();
 			return sSuraNames;
 		}
+
 		private string CallUrl(HttpClient client, string fullUrl)
 		{
 			//gm();
 			//ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
 			//client.DefaultRequestHeaders.Accept.Clear();
-			//client.GetStringAsync(fullUrl).Start();
 			//gm();
-
 			var response = client.GetStringAsync(fullUrl).Result;
-			//var respons = client.GetAsync(fullUrl).Result;
-			gm();
-
-			//client.Dispose();
-			//client = null;
-			//respons.Dispose();
-			//Debug.WriteLine(response);
-			gm();
-
-			//response = null;
 			//gm();
 			return response;
 		}
+
 		private List<string> ParseHtml(string html)
 		{
 			HtmlAgilityPack.HtmlDocument htmlDoc = new HtmlAgilityPack.HtmlDocument();
 			htmlDoc.LoadHtml(html);
 			var tags = htmlDoc.DocumentNode.SelectNodes("//*[@id=\"surah\"]/option");
-
 			List<string> sSuraNames = new List<string>();
-
 			foreach (var tag in tags)
 			{
 				sSuraNames.Add(tag.GetAttributeValue("value", ""));
 			}
 			//sSuraNames.Remove("0");
 			return sSuraNames;
-
 		}
+
 		private void GetSurah(HttpClient client, int surahID, string surahName, bool outputFile = true)
 		{
 			SurahData surahData = new SurahData();
 			surahData.SurahID = surahID;
-			//Gets aya count
-			//string aya = "10";
 			//CURRENTLY THIS METHOD IS COMPLETING ITS INTERNAL TASKS SYNCRONOUSLY.
 			AyaData ayaData = new AyaData();
 			StringBuilder sbAlQuranXml = new StringBuilder();
@@ -511,57 +469,39 @@ namespace ScraperPuppet
 			surahData.SurahNameEn = surahName.Substring(6, surahName.Length - 6);
 			GetSurahData(htmlDoc, ref surahData);
 			GetSurahLocation(htmlDoc, ref surahData);
-			#region Synchronous
-			//long startMemory = GC.GetTotalMemory(true);
-			//ayaData.sIntro = null;
-			//ayaData.sTafseer = null;
-			//ayaData.IntroSegments = null;
-			//ayaData.TafseerSegments = null;
 
+			#region Synchronous
 			for (int i = 1; i <= surahData.AyaCount; i++)
 			{
-
 				//surahData.Ayas.Add(await GetAyaDataAsync(client, surahData.SurahID, surahName, i));
 				surahData.Ayas.Add(GetAya(client, surahData.SurahID, surahName, i, false));
+				/*
+					surahData.Ayas[surahData.Ayas.Count - 1].sIntro = null;
+					surahData.Ayas[surahData.Ayas.Count - 1].sTafseer = null;
+					surahData.Ayas[surahData.Ayas.Count - 1].TafseerSegments = null;
+					surahData.Ayas[surahData.Ayas.Count - 1].IntroSegments = null;
 
-				//long endMemory = GC.GetTotalMemory(true);
-				//Debug.WriteLine("No. of bytes from caller = " + (endMemory - startMemory));
-				//Debug.WriteLine("No. of pages from caller = " + (endMemory - startMemory) / 8192);
+					surahData.Ayas[surahData.Ayas.Count - 1].Intro = null;
+					surahData.Ayas[surahData.Ayas.Count - 1].IntroSegmentedTag = null;
+					surahData.Ayas[surahData.Ayas.Count - 1].IntroSegmentedText = null;
+					surahData.Ayas[surahData.Ayas.Count - 1].IntroSegmentedXml = null;
+					surahData.Ayas[surahData.Ayas.Count - 1].IntroTag = null;
+					surahData.Ayas[surahData.Ayas.Count - 1].IntroXml = null;
+					surahData.Ayas[surahData.Ayas.Count - 1].Tafseer = null;
+					surahData.Ayas[surahData.Ayas.Count - 1].TafseerSegmentedTag = null;
+					surahData.Ayas[surahData.Ayas.Count - 1].TafseerSegmentedText = null;
+					surahData.Ayas[surahData.Ayas.Count - 1].TafseerSegmentedXml = null;
+					surahData.Ayas[surahData.Ayas.Count - 1].TafseerTag = null;
+					surahData.Ayas[surahData.Ayas.Count - 1].TafseerXml = null;
 
-				//surahData.Ayas[surahData.Ayas.Count - 1].sIntro = null;
-				//surahData.Ayas[surahData.Ayas.Count - 1].sTafseer = null;
-				//surahData.Ayas[surahData.Ayas.Count - 1].TafseerSegments = null;
-				//surahData.Ayas[surahData.Ayas.Count - 1].IntroSegments = null;
-
-				//surahData.Ayas[surahData.Ayas.Count - 1].Intro = null;
-				//surahData.Ayas[surahData.Ayas.Count - 1].IntroSegmentedTag = null;
-				//surahData.Ayas[surahData.Ayas.Count - 1].IntroSegmentedText = null;
-				//surahData.Ayas[surahData.Ayas.Count - 1].IntroSegmentedXml = null;
-				//surahData.Ayas[surahData.Ayas.Count - 1].IntroTag = null;
-				//surahData.Ayas[surahData.Ayas.Count - 1].IntroXml = null;
-				//surahData.Ayas[surahData.Ayas.Count - 1].Tafseer = null;
-				//surahData.Ayas[surahData.Ayas.Count - 1].TafseerSegmentedTag = null;
-				//surahData.Ayas[surahData.Ayas.Count - 1].TafseerSegmentedText = null;
-				//surahData.Ayas[surahData.Ayas.Count - 1].TafseerSegmentedXml = null;
-				//surahData.Ayas[surahData.Ayas.Count - 1].TafseerTag = null;
-				//surahData.Ayas[surahData.Ayas.Count - 1].TafseerXml = null;
-				//endMemory = GC.GetTotalMemory(true);
-				//Debug.WriteLine("No. of bytes from caller = " + (endMemory - startMemory));
-				//Debug.WriteLine("No. of pages from caller = " + (endMemory - startMemory) / 8192);
+				*/
 			}
-			//long endMemory = GC.GetTotalMemory(true);
-			//Debug.WriteLine("No. of bytes from caller = " + (endMemory - startMemory));
-			//Debug.WriteLine("No. of pages from caller = " + (endMemory - startMemory) / 8192);
-
 			//surahData.Ayas = null;
 			//surahData = null;
-			//endMemory = GC.GetTotalMemory(true);
-			//Debug.WriteLine("No. of bytes from caller = " + (endMemory - startMemory));
-			//Debug.WriteLine("No. of pages from caller = " + (endMemory - startMemory) / 8192);
 
 			Console.WriteLine("Completed");
-			//surahData = null;
 			#endregion
+
 			#region Asynchronous with Task.WhenAll
 
 			//var ayaTasks = new List<Task<AyaData>>();
@@ -580,21 +520,23 @@ namespace ScraperPuppet
 			//Console.WriteLine("Completed");
 
 			#endregion
-			#region Asynchronous with Task.WhenAny
-			/*			var ayaTasks = new List<Task<AyaData>>();
-						for (int i = 0; i < surahData.AyaCount; i++)
-						{
-							ayaTasks.Add(GetAyaDataAsync(surahName, i));
-							//surahData.Ayas.Add(await GetAyaDataAsync(surahName, i));
-						}
-						while (ayaTasks.Count > 0)
-						{
-							var finishedTask = await Task.WhenAny(ayaTasks);
-							surahData.Ayas.Add(finishedTask.Result);
-							ayaTasks.Remove(finishedTask);
-						}
 
-						Console.WriteLine("Completed");*/
+			#region Asynchronous with Task.WhenAny
+			/*			
+				var ayaTasks = new List<Task<AyaData>>();
+				for (int i = 0; i < surahData.AyaCount; i++)
+				{
+					ayaTasks.Add(GetAyaDataAsync(surahName, i));
+					//surahData.Ayas.Add(await GetAyaDataAsync(surahName, i));
+				}
+				while (ayaTasks.Count > 0)
+				{
+					var finishedTask = await Task.WhenAny(ayaTasks);
+					surahData.Ayas.Add(finishedTask.Result);
+					ayaTasks.Remove(finishedTask);
+				}
+
+				Console.WriteLine("Completed");*/
 			#endregion
 
 			if (outputFile)
@@ -604,59 +546,34 @@ namespace ScraperPuppet
 				//sbAlQuranSegmentedXml.Append($"\t<qurah>\n");
 				sbAlQuranSegmentedXml.Append($"\t<surah id =\"surah_{surahData.SurahID}\">\n");
 
-				//File.AppendAllText("Output Files\\AlQuran.xml", ayaData.IntroXml); // Will be returned to parent method for proper placement in file.
-				//File.AppendAllText("Output Files\\AlQuranSegmented.xml", ayaData.IntroSegmentedXml);
-				//File.AppendAllText("Output Files\\Intro.xml", ayaData.IntroTag);
-				//File.AppendAllText("Output Files\\IntroSegmented.xml", ayaData.IntroSegmentedTag);
-				//File.AppendAllText("Output Files\\SurahTafseer.xml", ayaData.IntroTag);
-				sbAlQuranXml.Append(surahData.Ayas[0].IntroXml);
 				sbAlQuranSegmentedXml.Append(surahData.Ayas[0].IntroSegmentedXml);
 				sbIntroXml.Append(surahData.Ayas[0].IntroTag);
 				sbIntroSeqmentedXml.Append(surahData.Ayas[0].IntroSegmentedTag);
 				sbSurahTafseerXml.Append(surahData.Ayas[0].IntroTag);
 
-				//File.AppendAllText("Output Files\\AlQuran.txt", ayaData.Intro);
 				sbAlQuran.Append(surahData.Ayas[0].Intro);
-				//File.AppendAllText("Output Files\\AlQuranSegmented.txt", ayaData.IntroSegmentedText);
 				sbAlQuranSegmented.Append(surahData.Ayas[0].IntroSegmentedText);
-				//File.AppendAllText("Output Files\\Intro.txt", ayaData.Intro);
 				sbIntro.Append(surahData.Ayas[0].Intro);
-				//File.AppendAllText("Output Files\\IntroSegmented.txt", ayaData.IntroSegmentedText);
 				sbIntroSegmented.Append(surahData.Ayas[0].IntroSegmentedText);
 				sbAlQuranXml.Append($"\t\t<ayaat count =\"{surahData.AyaCount}\">\n");
 				sbAlQuranSegmentedXml.Append($"\t\t <ayaat count =\"{surahData.AyaCount}\">\n");
 				for (int i = 0; i < surahData.AyaCount; i++)
 				{
-					//File.AppendAllText("Output Files\\AlQuran.xml", ayaData.Xml);
 					sbAlQuranXml.Append(surahData.Ayas[i].Xml);
-					//File.AppendAllText("Output Files\\AlQuranSegmented.xml", ayaData.XmlSegmented);
 					sbAlQuranSegmentedXml.Append(surahData.Ayas[i].XmlSegmented);
-					//File.AppendAllText("Output Files\\SurahTafseer.xml", ayaData.TafseerTag);
 					sbSurahTafseerXml.Append(surahData.Ayas[i].TafseerTag);
-					//File.AppendAllText("Output Files\\Tafseer.xml", ayaData.TafseerTag);
 					sbSurahTafseerXml.Append(surahData.Ayas[i].TafseerTag);
-					//File.AppendAllText("Output Files\\TafseerSegmented.xml", ayaData.TafseerSegmentedTag);
 					sbTafseerSegmentedXml.Append(surahData.Ayas[i].TafseerSegmentedTag);
 
-					//File.AppendAllText("Output Files\\AlQuran.txt", ayaData.Aya);
 					sbAlQuran.Append(surahData.Ayas[i].Aya);
-					//File.AppendAllText("Output Files\\AlQuran.txt", ayaData.KIman);
 					sbAlQuran.Append(surahData.Ayas[i].KIman);
-					//File.AppendAllText("Output Files\\AlQuran.txt", ayaData.KIrfan);
 					sbAlQuran.Append(surahData.Ayas[i].KIrfan);
-					//File.AppendAllText("Output Files\\AlQuran.txt", ayaData.Tafseer);
 					sbAlQuran.Append(surahData.Ayas[i].Tafseer);
-					//File.AppendAllText("Output Files\\AlQuranSegmented.txt", ayaData.TafseerSegmentedText);
 					sbAlQuranSegmented.Append(surahData.Ayas[i].TafseerSegmentedText);
-					//File.AppendAllText("Output Files\\Tafseer.txt", ayaData.Tafseer);
 					sbTafseer.Append(surahData.Ayas[i].Tafseer);
-					//File.AppendAllText("Output Files\\TafseerSegmented.txt", ayaData.TafseerSegmentedText);
 					sbTafseerSegmented.Append(surahData.Ayas[i].TafseerSegmentedText);
-					//File.AppendAllText("Output Files\\AlQuranAya.txt", ayaData.Aya);
 					sbAlQuranAya.Append(surahData.Ayas[i].Aya);
-					//File.AppendAllText("Output Files\\KanzulIman.txt", ayaData.KIman);
 					sbKanzulIman.Append(surahData.Ayas[i].KIman);
-					//File.AppendAllText("Output Files\\KanzulIrfan.txt", ayaData.KIrfan);
 					sbKanzulIrfan.Append(surahData.Ayas[i].KIrfan);
 				}
 				sbAlQuranXml.Append($"\t\t</ayaat>\n");
@@ -691,14 +608,18 @@ namespace ScraperPuppet
 
 			}
 		}
+
 		private void GetSurahData(HtmlAgilityPack.HtmlDocument htmlDocument, ref SurahData surahData)
 		{
+			// UPDATE
+			// Swap surah method names.
+			// Add continuous aya id index.
+			// Add surah data to output like surah location and revelation ID.
 			/*
 			//*[@id="araayat"]/div/div[1]/table/tbody/tr[2]/td[1]/span/br
 			//*[@id="araayat"]/div[1]/table/tbody/tr[2]/td[1]/span/br
 			//html/body/div/section[2]/div/div[1]/div[2]/div[2]/div[2]/div[1]/table/tbody/tr[2]/td[1]/span/br
 			//document.querySelector("#araayat > div:nth-child(1) > table > tbody > tr:nth-child(2) > td.two__row__td_one > span > br")
-			//#araayat > div:nth-child(1) > table > tbody > tr:nth-child(2) > td.two__row__td_one > span > br
 			var node1 = htmlDocument.DocumentNode.SelectSingleNode("//*[@id=\"araayat\"]/div[1]/table/tr[2]/td[1]/span");
 			Console.WriteLine(node1.InnerText.Split('\n')[3]);
 			
@@ -716,34 +637,16 @@ namespace ScraperPuppet
 				for (int i = 0; i < 1000000; i++)
 			*/
 			IEnumerable<HtmlNode> nodes = htmlDocument.DocumentNode.Descendants("span").Where(node => node.GetAttributeValue("class", "").Contains("sura__name__res"));
-			/*
-				stopwatch.Stop();
-				Console.WriteLine(stopwatch.ElapsedMilliseconds.ToString());
-			
 
-			foreach (var item in nodes)
-			{
-				var elements0 = item.InnerText.Split('\n');
-				int count = elements0.Length;
-				int subtract = count == 1 ? 1 : 2;
-				Debug.WriteLine(elements0[count - subtract].Trim());
-				var attributes = item.GetAttributes();
-				foreach (var attrib in attributes)
-				{
-					Console.WriteLine(attrib.Name);
-					Console.WriteLine(attrib.Value);
-				}
-			}
-			*/
 			var nodesArray = nodes.ToArray();
 
 			string[] elements = nodesArray[0].InnerText.Split('\n');
 			surahData.AyaCount = int.Parse(elements[elements.Length - (elements.Length == 1 ? 1 : 2)].Trim());
-			Debug.WriteLine(surahData.AyaCount);
+			//Debug.WriteLine(surahData.AyaCount);
 
 			elements = nodesArray[1].InnerText.Split('\n');
 			surahData.SurahID = int.Parse(elements[elements.Length - (elements.Length == 1 ? 1 : 2)].Trim());
-			Debug.WriteLine("Surah ID = " + surahData.SurahID);
+			//Debug.WriteLine("Surah ID = " + surahData.SurahID);
 
 			elements = nodesArray[2].InnerText.Split('\n');
 			surahData.SurahNameAr = elements[elements.Length - (elements.Length == 1 ? 1 : 2)].Trim();
@@ -751,11 +654,11 @@ namespace ScraperPuppet
 
 			elements = nodesArray[3].InnerText.Split('\n');
 			surahData.RevelationID = int.Parse(elements[elements.Length - (elements.Length == 1 ? 1 : 2)].Trim());
-			Debug.WriteLine("Revelation ID = " + surahData.RevelationID);
+			//Debug.WriteLine("Revelation ID = " + surahData.RevelationID);
 
 			elements = nodesArray[4].InnerText.Split('\n');
 			surahData.RukuCount = int.Parse(elements[elements.Length - (elements.Length == 1 ? 1 : 2)].Trim());
-			Debug.WriteLine("Surah has rukus = " + surahData.RukuCount);
+			//Debug.WriteLine("Surah has rukus = " + surahData.RukuCount);
 		}
 		private void GetSurahLocation(HtmlAgilityPack.HtmlDocument htmlDocument, ref SurahData surahData)
 		{
@@ -781,7 +684,7 @@ namespace ScraperPuppet
 			string[] elements = nodes.First().InnerText.Split('\n');
 			string temp = elements[elements.Length - 2].Trim();
 			surahData.SurahLocation = temp.Substring(2, temp.Length - 3);
-			Debug.WriteLine(surahData.SurahLocation);
+			//Debug.WriteLine(surahData.SurahLocation);
 		}
 		private AyaData GetAya(HttpClient client, int surahId, string surahName, int aya, bool outputFile = false)
 		{
@@ -919,11 +822,8 @@ namespace ScraperPuppet
 			var index = Array.FindIndex(aTranslation, str => str.Contains("کنزالعرفان"));
 			var sTranslation = aTranslation[ayaData.AyaIndex + index + 1];
 			//Debug.WriteLine(node.InnerText);
-			//ayaData.KIman = node.InnerText.Trim();
 			ayaData.KIrfan = sTranslation;
-			//ayaData.KIrfan = node.InnerText;
 			ayaData.KIrfanXml = $"\t\t\t\t<kirfam id=\"urdu_2_{ayaData.SurahID}.{ayaData.AyaID}\">\n\t\t\t\t\t{ayaData.KIrfan}\n\t\t\t\t</kirfan>\n";
-			//textBox1.Text += ayaData.KIrfan;
 			if (outputFile)
 			{
 				File.AppendAllText("Output Files\\AlQuran.txt", ayaData.KIrfan);
@@ -935,29 +835,10 @@ namespace ScraperPuppet
 		private void GetAyaTafseer(HtmlAgilityPack.HtmlDocument htmlDocument, ref AyaData ayaData, bool outputFile = false)
 		{
 
-			//Process p = Process.GetCurrentProcess();
-			//long pMemoryStart = p.PrivateMemorySize64;
-			//long[] temp = new long[2045];
-			//long a = 0;
-			//p = null;
-			//GC.Collect();
-			//long pMemoryEnd = p.PrivateMemorySize64;
-			//List<long> memory = new List<long>(1019);
-			//long endMemory = GC.GetTotalMemory(false);
-			//Debug.WriteLine(endMemory - startMemory);
-			string sInnerText = ""; // To store segment value.
-			string sFontText; // To store style attribute value giving font details.
-			string[] sFontTexts; // To store font details from style attribute.
-			string sFontSize; // To store font size.
-			string sFontFamily = "Times New Roman";
-			string sLanguage; // To store text language.
-			int iLangID; // To store language ID.
-			int iFontID; // To store font ID.
 			StringBuilder sb = new StringBuilder();
 			StringBuilder sb2 = new StringBuilder();
 			StringBuilder sb3 = new StringBuilder();
 			List<string> sAya = new List<string>();
-			string sAyaData;
 			int iSegmentID = 0;
 			//Each node has 2 attributes, style and lang.
 			//style gives font size and fontfamily while l
@@ -1017,42 +898,6 @@ namespace ScraperPuppet
 				#region Code for Intro Segments
 
 				// Stores intro segments.
-				/*foreach (var node in segnodesIntro)
-				{
-					sInnerText = node.InnerText.Replace("\r\n", " ").Replace("&nbsp", " ").Replace(';', ' ');
-					sFontText = node.GetAttributeValue("style", "No Attribute");
-					sFontTexts = sFontText.Replace("&quot;", "").Replace("\r\n", "").Split(';', ':');
-					sFontSize = sFontTexts[1].Replace("pt", "").Trim();
-					sFontFamily = sFontTexts[3].Trim();
-
-					if (sFontFamily.Contains("Noori"))
-					{
-						sLanguage = "UR";
-						iLangID = 1;
-						iFontID = 1;
-					}
-					else if (sFontFamily.Contains("Mushaf"))
-					{
-						sLanguage = "AR-SA";
-						iLangID = 2;
-						iFontID = 2;
-					}
-					else if (sFontFamily.Contains("Qalam"))
-					{
-						sLanguage = "AR-SA";
-						iLangID = 2;
-						iFontID = 3;
-					}
-					else
-					{
-						sLanguage = "EN";
-						iLangID = 0;
-						iFontID = 0;
-					}
-					ayaData.AddIntro(sInnerText, sLanguage, iLangID, sFontFamily, iFontID, sFontSize);
-				}
-*/
-				ExtractSegments(ayaData.AddIntro, ayaData, segnodesIntro);
 				sb.Clear(); sb2.Clear(); sb3.Clear();
 				iSegmentID = 0;
 				sb3.Append($"\t\t<intro id=\"intro_{ayaData.SurahID}\">\n");
@@ -1175,11 +1020,6 @@ namespace ScraperPuppet
 			ayaData.sTafseer = null;
 			ayaData.IntroSegments = null;
 			ayaData.TafseerSegments = null;
-			Debug.WriteLine(ayaData.Aya);
-
-			//var attrib = nodes[1].GetDataAttributes();
-			//var attributes = nodes[20].GetDataAttributes();
-
 		}
 
 		private static void ExtractSegments(AddSegmentDel addmethod, AyaData ayaData, IEnumerable<HtmlNode> segments)
@@ -1195,16 +1035,9 @@ namespace ScraperPuppet
 
 			foreach (var node in segments)
 			{
-				//i++;
-				//if (i == 42)
-				//{
-				//	Console.WriteLine("Houston! we have a problem");
-				//}
-				//Console.WriteLine(i.ToString());
 				//sInnerText = node.InnerText.Replace("\r\n", " ").Replace("&nbsp", " ").Replace(';', ' ').Replace("  ", " ");
 				sInnerText = Regex.Replace(node.InnerText.Replace("\r\n", " ").Replace("&nbsp", " ").Replace(';', ' '), @"\s+", " ");
 				//sInnerText = Regex.Replace(node.InnerText.Replace("\r\n", " ").Replace("&nbsp", " ").Replace(';', ' '), " {2,}", " ");
-				//sInnerText = node.InnerText.Replace("\r\n", " ").Replace(';', ' ').Replace("  ", " ");
 				sFontText = node.GetAttributeValue("style", "No Attribute");
 				sFontTexts = sFontText.Replace("&quot;", "").Replace("\r\n", "").Split(';', ':');
 				var iFontIndex = Array.FindIndex(sFontTexts, str => str.Contains("family")) + 1;
@@ -1218,7 +1051,7 @@ namespace ScraperPuppet
 				else
 				{
 					Console.WriteLine($"ERROR!!! - sFontTexts Index out of range - {sFontTexts.Length.ToString()}");
-					//MessageBox.Show("ERROR!!! - sFontTexts Index out of range", "ERROR IN TAFSEER SEGMENT");
+					MessageBox.Show("ERROR!!! - sFontTexts Index out of range", "ERROR IN TAFSEER SEGMENT");
 					sFontFamily = sFontTexts[iFontIndex].Trim();
 				}
 
