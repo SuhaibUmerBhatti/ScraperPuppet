@@ -14,6 +14,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+
 namespace ScraperPuppet
 {
 
@@ -68,7 +69,7 @@ namespace ScraperPuppet
 				//await GetSurah(2, sSuraNames[2]);
 			}
 			gm();
-			for (int i = 104; i < sSuraNames.Count; i++)
+			for (int i = 113; i < sSuraNames.Count; i++)
 			{
 				//await GetSurahAsync(httpClient, i, sSuraNames[i]);
 				GetSurah(httpClient, i, sSuraNames[i], true);
@@ -795,7 +796,7 @@ namespace ScraperPuppet
 			HtmlAgilityPack.HtmlDocument htmlDoc = new HtmlAgilityPack.HtmlDocument();
 			htmlDoc.LoadHtml(response);
 
-			GetAyaText(htmlDoc, ref ayaData, false);
+			GetAyaText(htmlDoc, ayaData, false);
 			GetAyaKIman(htmlDoc, ref ayaData, false);
 			GetAyaKIrfan(htmlDoc, ref ayaData, false);
 			GetAyaTafseer(htmlDoc, ref ayaData, false);
@@ -846,17 +847,22 @@ namespace ScraperPuppet
 			}
 			return ayaData;
 		}
-		private void GetAyaText(HtmlAgilityPack.HtmlDocument htmlDocument, ref AyaData ayaData, bool outputFile = false)
+		private void GetAyaText(HtmlAgilityPack.HtmlDocument htmlDocument, AyaData ayaData, bool outputFile = false)
 		{
 			// UPDATE: CHANGE CODE TO USE DESCENDANTS INSTEAD OF SELECTNODES.
-			var node = htmlDocument.DocumentNode.SelectSingleNode("//*[@id=\"araayat\"]/div/div[1]/div[2]/div/p");
+			var node0 = htmlDocument.DocumentNode.SelectSingleNode("//*[@id=\"araayat\"]/div/div[1]/div[2]/div/p");
 			var node1 = htmlDocument.DocumentNode.Descendants("p").Where(p => p.GetAttributeValue("class", "").Contains("arabic")).First();
-
 			//Debug.WriteLine(node.InnerText);
 			//return await Task.FromResult(node.InnerText);
 
-			ayaData.Aya = node1.InnerText;
+			//ayaData.Aya = node1.InnerText;
+			string[] aAya = node1.InnerText.Split(')');
+			ayaData.AyaCount = aAya.Length - 1;
+			ayaData.AyaIndex = Array.FindIndex(aAya, str => str.Contains(ayaData.AyaID.ToString()));
+			string sAya = aAya[ayaData.AyaIndex] + ")";
+			ayaData.Aya = sAya;
 			ayaData.AyaXml = $"\t\t\t\t<ayatext id=\"arabic_{ayaData.SurahID}.{ayaData.AyaID}\">\n\t\t\t\t\t{ayaData.Aya}\n\t\t\t\t</ayatext>\n";
+			//textBox1.Text += ayaData.Aya;
 			if (outputFile)
 			{
 				File.AppendAllText("Output Files\\AlQuran.txt", ayaData.Aya);
@@ -870,9 +876,23 @@ namespace ScraperPuppet
 		{
 			// UPDATE: CHANGE CODE TO USE DESCENDANTS INSTEAD OF SELECTNODES.
 			var node = htmlDocument.DocumentNode.SelectSingleNode("//*[@id=\"araayat\"]/div/div[1]/span[2]");
+			var nodes = htmlDocument.DocumentNode.Descendants("span").Where(p => p.GetAttributeValue("class", "").Contains("ur"));
+			List<string> lTranslation = new List<string>();
+			foreach (var item in nodes)
+			{
+				lTranslation.Add(item.InnerText.Trim());
+			}
+			string[] aTranslation = new string[lTranslation.Count];
+			aTranslation = lTranslation.ToArray();
+			var index = Array.FindIndex(aTranslation, str => str.Contains("کنزالایمان"));
+
+			//var index = Array.FindIndex(aTranslation, str => str.Contains("کنزالعرفان"));
+			var sTranslation = aTranslation[ayaData.AyaIndex + index + 1];
 			//Debug.WriteLine(node.InnerText);
-			ayaData.KIman = node.InnerText;
+			//ayaData.KIman = node.InnerText.Trim();
+			ayaData.KIman = sTranslation;
 			ayaData.KImanXml = $"\t\t\t\t<kiman id=\"urdu_1_{ayaData.SurahID}.{ayaData.AyaID}\">\n\t\t\t\t\t{ayaData.KIman}\n\t\t\t\t</kiman>\n";
+			//textBox1.Text += ayaData.KIman;
 			if (outputFile)
 			{
 				File.AppendAllText("Output Files\\AlQuran.txt", ayaData.KIman);
@@ -886,8 +906,24 @@ namespace ScraperPuppet
 			// UPDATE: CHANGE CODE TO USE DESCENDANTS INSTEAD OF SELECTNODES.
 			var node = htmlDocument.DocumentNode.SelectSingleNode("//*[@id=\"araayat\"]/div/div[1]/span[4]");
 			//Debug.WriteLine(node.InnerText);
-			ayaData.KIrfan = node.InnerText;
+			var nodes = htmlDocument.DocumentNode.Descendants("span").Where(p => p.GetAttributeValue("class", "").Contains("ur"));
+			List<string> lTranslation = new List<string>();
+			foreach (var item in nodes)
+			{
+				lTranslation.Add(item.InnerText.Trim());
+			}
+			string[] aTranslation = new string[lTranslation.Count];
+			aTranslation = lTranslation.ToArray();
+			//var index = Array.FindIndex(aTranslation, str => str.Contains("کنزالایمان"));
+
+			var index = Array.FindIndex(aTranslation, str => str.Contains("کنزالعرفان"));
+			var sTranslation = aTranslation[ayaData.AyaIndex + index + 1];
+			//Debug.WriteLine(node.InnerText);
+			//ayaData.KIman = node.InnerText.Trim();
+			ayaData.KIrfan = sTranslation;
+			//ayaData.KIrfan = node.InnerText;
 			ayaData.KIrfanXml = $"\t\t\t\t<kirfam id=\"urdu_2_{ayaData.SurahID}.{ayaData.AyaID}\">\n\t\t\t\t\t{ayaData.KIrfan}\n\t\t\t\t</kirfan>\n";
+			//textBox1.Text += ayaData.KIrfan;
 			if (outputFile)
 			{
 				File.AppendAllText("Output Files\\AlQuran.txt", ayaData.KIrfan);
@@ -1366,6 +1402,8 @@ namespace ScraperPuppet
 			internal class AyaData
 			{
 				public int AyaID { get; set; }
+				public int AyaCount { get; set; }
+				public int AyaIndex { get; set; }
 				public int SurahID { get; set; }
 				public string SurahName { get; set; }
 
