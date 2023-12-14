@@ -49,8 +49,8 @@ namespace ScraperPuppet
 
 			string fullUrl = "https://alqurankarim.net/surah-al-mursalat";
 			Stopwatch sw = Stopwatch.StartNew();
-			int iAyaCountContinuous = 0;
-			int iRukuCountContinuous = 0;
+			int iAyaCountRunning = 0;
+			int iRukuCountRunning = 0;
 			sw.Start();
 			//cm();
 			//gm();
@@ -86,7 +86,7 @@ namespace ScraperPuppet
 				{
 					//await GetSurahAsync(httpClient, i, sSuraNames[i]);
 					//GetSurah(httpClient, i, sSuraNames[i], true);
-					GetSurahInfo(httpClient, i, sSuraNames[i], ref iRukuCountContinuous, ref iAyaCountContinuous, true);
+					GetSurahInfo(httpClient, i, sSuraNames[i], ref iRukuCountRunning, ref iAyaCountRunning, true);
 					Console.WriteLine("Completed");
 					Console.WriteLine(sw.Elapsed);
 				}
@@ -460,7 +460,7 @@ namespace ScraperPuppet
 			return sSuraNames;
 		}
 
-		private void GetSurahInfo(HttpClient client, int surahID, string surahName, ref int rukuCountContinuous, ref int ayaCountContinuous, bool outputFile = true)
+		private void GetSurahInfo(HttpClient client, int surahID, string surahName, ref int rukuCountRunning, ref int ayaCountRunning, bool outputFile = true)
 		{
 			if (client is null)
 			{
@@ -488,10 +488,11 @@ namespace ScraperPuppet
 			surahData.SurahNameEn = surahName.Substring(6, surahName.Length - 6);
 			GetSurahData(htmlDoc, ref surahData);
 			GetSurahLocation(htmlDoc, ref surahData);
-
+			ayaCountRunning += surahData.AyaCount;
+			rukuCountRunning += surahData.RukuCount;
 			if (outputFile)
 			{
-				sb.Append($"{surahData.SurahNameEn};{surahData.SurahNameAr};{surahData.AyaCount};{ayaCountContinuous};{surahData.RukuCount};{rukuCountContinuous};{surahData.SurahID};{surahData.SurahLocation};{surahData.RevelationID}\n");
+				sb.Append($"{surahData.SurahID};{surahData.SurahNameEn};{surahData.AyaCount};{ayaCountRunning};{surahData.RukuCount};{rukuCountRunning};{surahData.RevelationID};{surahData.SurahLocation};{surahData.SurahNameAr}\n");
 
 				#region File writing area.
 
