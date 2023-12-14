@@ -20,17 +20,17 @@ namespace ScraperPuppet
 
 	public partial class Form1 : Form
 	{
-		HttpClient httpClient = new HttpClient();
+		readonly HttpClient httpClient = new HttpClient();
 		private List<string> sSuraNames = new List<string>();
 		public Form1()
 		{
 			InitializeComponent();
-			cm();
+			Cm();
 		}
 
 		long startMemory;
 
-		public void gm()
+		public void Gm()
 		{
 
 			long endMemory = GC.GetTotalMemory(true);
@@ -38,18 +38,19 @@ namespace ScraperPuppet
 			Debug.WriteLine("No. of bytes since last cm = " + (endMemory - startMemory));
 			Debug.WriteLine("No. of pages since last cm = " + (endMemory - startMemory) / 8192);
 		}
-		public void cm()
+		public void Cm()
 		{
 			Console.WriteLine("Start memory before clearing = " + startMemory.ToString());
 			startMemory = GC.GetTotalMemory(true);
 			Console.WriteLine("New Start memory set to current heap = " + startMemory.ToString());
 		}
-		private async void button1_Click(object sender, EventArgs e)
+		private void Button1_Click(object sender, EventArgs e)
 		{
 
 			string fullUrl = "https://alqurankarim.net/surah-al-mursalat";
 			Stopwatch sw = Stopwatch.StartNew();
-
+			int iAyaCountContinuous = 0;
+			int iRukuCountContinuous = 0;
 			sw.Start();
 			//cm();
 			//gm();
@@ -76,18 +77,24 @@ namespace ScraperPuppet
 			int surahID = 1;
 			int ayaID = 0;
 			if (ayaID != 0)
+			{
 				GetSurah(httpClient, surahID, sSuraNames[surahID], false, ayaID);
+			}
 			else
+			{
 				for (int i = surahID; i < sSuraNames.Count; i++)
 				{
 					//await GetSurahAsync(httpClient, i, sSuraNames[i]);
-					GetSurah(httpClient, i, sSuraNames[i], true);
+					//GetSurah(httpClient, i, sSuraNames[i], true);
+					GetSurahInfo(httpClient, i, sSuraNames[i], ref iRukuCountContinuous, ref iAyaCountContinuous, true);
 					Console.WriteLine("Completed");
 					Console.WriteLine(sw.Elapsed);
 				}
+			}
+
 			sw.Stop();
 			Console.WriteLine(sw.Elapsed);
-			gm();
+			Gm();
 			Console.WriteLine("End");
 		}
 
@@ -201,10 +208,10 @@ namespace ScraperPuppet
 			await page.GoToAsync(url);
 			await navigationTask;
 			// Navigates to page.	#araayat > div > div.col-lg-12.col-12 > div.row > div > p     document.querySelector("#araayat > div > div.col-lg-12.col-12 > div.row > div > p")
-			sAya = await GetAyaPuppetAsync(page);
-			sAya = await GetAyaKImanPuppetAsync(page);
+			//sAya = await GetAyaPuppetAsync(page);
+			//sAya = await GetAyaKImanPuppetAsync(page);
 			sAya = await GetAyaKIrfanPuppetAsync(page);
-			List<string> sTafseer = await GetAyaTafseerPuppetAsync(page);
+			//List<string> sTafseer = await GetAyaTafseerPuppetAsync(page);
 			return sAya;
 		}
 
@@ -278,12 +285,14 @@ namespace ScraperPuppet
 		}
 		private async Task GetSurahAsync(HttpClient client, int surahID, string surahName)
 		{
-			SurahData surahData = new SurahData();
-			surahData.SurahID = surahID;
+			SurahData surahData = new SurahData
+			{
+				SurahID = surahID
+			};
 			//Gets aya count
 			//string aya = "10";
 			//CURRENTLY THIS METHOD IS COMPLETING ITS INTERNAL TASKS SYNCRONOUSLY.
-			AyaData ayaData = new AyaData();
+			//AyaData ayaData = new AyaData();
 
 			string url = $"https://alqurankarim.net/{surahName}";
 			string response = await CallUrlAsync(client, url);
@@ -369,10 +378,12 @@ namespace ScraperPuppet
 		private async Task<AyaData> GetAyaDataAsync(HttpClient client, int surahId, string surahName, int aya)
 		{
 			//CURRENTLY THIS METHOD IS COMPLETING ITS INTERNAL TASKS SYNCRONOUSLY.
-			AyaData ayaData = new AyaData();
-			ayaData.SurahID = surahId;
-			ayaData.SurahName = surahName;
-			ayaData.AyaID = aya;
+			AyaData ayaData = new AyaData
+			{
+				SurahID = surahId,
+				SurahName = surahName,
+				AyaID = aya
+			};
 			string url = $"https://alqurankarim.net/ur/{surahName}/ayat-{aya}/translation/tafsir";
 			string response = await CallUrlAsync(client, url);
 			// Navigates to page.	#araayat > div > div.col-lg-12.col-12 > div.row > div > p     document.querySelector("#araayat > div > div.col-lg-12.col-12 > div.row > div > p")
@@ -430,7 +441,7 @@ namespace ScraperPuppet
 			//ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
 			//client.DefaultRequestHeaders.Accept.Clear();
 			//gm();
-			var response = client.GetStringAsync(fullUrl).Result;
+			string response = client.GetStringAsync(fullUrl).Result;
 			//gm();
 			return response;
 		}
@@ -449,12 +460,56 @@ namespace ScraperPuppet
 			return sSuraNames;
 		}
 
+		private void GetSurahInfo(HttpClient client, int surahID, string surahName, ref int rukuCountContinuous, ref int ayaCountContinuous, bool outputFile = true)
+		{
+			if (client is null)
+			{
+				throw new ArgumentNullException(nameof(client));
+			}
+
+			if (string.IsNullOrEmpty(surahName))
+			{
+				throw new ArgumentException($"'{nameof(surahName)}' cannot be null or empty.", nameof(surahName));
+			}
+
+			SurahData surahData = new SurahData
+			{
+				SurahID = surahID
+			};
+
+			//CURRENTLY THIS METHOD IS COMPLETING ITS INTERNAL TASKS SYNCRONOUSLY.
+			StringBuilder sb = new StringBuilder();
+
+			string url = $"https://alqurankarim.net/{surahName}";
+			string response = CallUrl(client, url);
+			// Navigates to page.	#araayat > div > div.col-lg-12.col-12 > div.row > div > p     document.querySelector("#araayat > div > div.col-lg-12.col-12 > div.row > div > p")
+			HtmlAgilityPack.HtmlDocument htmlDoc = new HtmlAgilityPack.HtmlDocument();
+			htmlDoc.LoadHtml(response);
+			surahData.SurahNameEn = surahName.Substring(6, surahName.Length - 6);
+			GetSurahData(htmlDoc, ref surahData);
+			GetSurahLocation(htmlDoc, ref surahData);
+
+			if (outputFile)
+			{
+				sb.Append($"{surahData.SurahNameEn};{surahData.SurahNameAr};{surahData.AyaCount};{ayaCountContinuous};{surahData.RukuCount};{rukuCountContinuous};{surahData.SurahID};{surahData.SurahLocation};{surahData.RevelationID}\n");
+
+				#region File writing area.
+
+				File.AppendAllText("Output Files\\AlQuranData.txt", sb.ToString()); // Will be returned to parent method for proper placement in file.
+
+				#endregion
+
+			}
+		}
+
 		private void GetSurah(HttpClient client, int surahID, string surahName, bool outputFile = true, int ayaID = 0)
 		{
-			SurahData surahData = new SurahData();
-			surahData.SurahID = surahID;
+			SurahData surahData = new SurahData
+			{
+				SurahID = surahID
+			};
 			//CURRENTLY THIS METHOD IS COMPLETING ITS INTERNAL TASKS SYNCRONOUSLY.
-			AyaData ayaData = new AyaData();
+			//AyaData ayaData = new AyaData();
 			StringBuilder sbAlQuranXml = new StringBuilder();
 			StringBuilder sbAlQuranSegmentedXml = new StringBuilder();
 			StringBuilder sbIntroXml = new StringBuilder();
@@ -716,10 +771,12 @@ namespace ScraperPuppet
 		private AyaData GetAya(HttpClient client, int surahId, string surahName, int aya, bool outputFile = false)
 		{
 			//CURRENTLY THIS METHOD IS COMPLETING ITS INTERNAL TASKS SYNCRONOUSLY.
-			AyaData ayaData = new AyaData();
-			ayaData.SurahID = surahId;
-			ayaData.SurahName = surahName;
-			ayaData.AyaID = aya;
+			AyaData ayaData = new AyaData
+			{
+				SurahID = surahId,
+				SurahName = surahName,
+				AyaID = aya
+			};
 			string url = $"https://alqurankarim.net/ur/{surahName}/ayat-{aya}/translation/tafsir";
 			string response = CallUrl(client, url);
 			// Navigates to page.	#araayat > div > div.col-lg-12.col-12 > div.row > div > p     document.querySelector("#araayat > div > div.col-lg-12.col-12 > div.row > div > p")
@@ -836,10 +893,10 @@ namespace ScraperPuppet
 			}
 			string[] aTranslation = new string[lTranslation.Count];
 			aTranslation = lTranslation.ToArray();
-			var index = Array.FindIndex(aTranslation, str => str.Contains("کنزالایمان"));
+			int index = Array.FindIndex(aTranslation, str => str.Contains("کنزالایمان"));
 
 			//var index = Array.FindIndex(aTranslation, str => str.Contains("کنزالعرفان"));
-			var sTranslation = aTranslation[ayaData.AyaIndex + index + 1];
+			string sTranslation = aTranslation[ayaData.AyaIndex + index + 1];
 			//Debug.WriteLine(node.InnerText);
 			//ayaData.KIman = node.InnerText.Trim();
 			ayaData.KIman = sTranslation + "\n";
@@ -868,8 +925,8 @@ namespace ScraperPuppet
 			aTranslation = lTranslation.ToArray();
 			//var index = Array.FindIndex(aTranslation, str => str.Contains("کنزالایمان"));
 
-			var index = Array.FindIndex(aTranslation, str => str.Contains("کنزالعرفان"));
-			var sTranslation = aTranslation[ayaData.AyaIndex + index + 1];
+			int index = Array.FindIndex(aTranslation, str => str.Contains("کنزالعرفان"));
+			string sTranslation = aTranslation[ayaData.AyaIndex + index + 1];
 			//Debug.WriteLine(node.InnerText);
 			ayaData.KIrfan = sTranslation + "\n";
 			ayaData.KIrfanXml = $"\t\t\t\t<kirfam id=\"urdu_2_{ayaData.SurahID}.{ayaData.AyaID}\">\n\t\t\t\t\t{ayaData.KIrfan}\t\t\t\t</kirfan>\n";
@@ -912,14 +969,14 @@ namespace ScraperPuppet
 				foreach (var node in nodesIntro)
 				{
 					//ayaData.sIntro.Add(node.InnerText.Replace("\r\n", " ").Replace("&nbsp", " ").Replace(';', ' '));
-					ayaData.sIntro.Add(Regex.Replace(node.InnerText.Replace("\r\n", " ").Replace("&nbsp", " ").Replace(';', ' '), @"\s+", " "));
+					ayaData.SIntro.Add(Regex.Replace(node.InnerText.Replace("\r\n", " ").Replace("&nbsp", " ").Replace(';', ' '), @"\s+", " "));
 
 				}
 
 				sb.Clear(); sb2.Clear(); sb3.Clear();
 				iSegmentID = 0;
 				sb3.Append($"\t\t<intro id=\"intro_{ayaData.SurahID}\">\n");
-				foreach (var node in ayaData.sIntro)
+				foreach (string node in ayaData.SIntro)
 				{
 					iSegmentID++;
 					sb.Append($"{node}. "); // For ayaData.Intro, Intro.txt.
@@ -993,14 +1050,14 @@ namespace ScraperPuppet
 			{
 
 				//ayaData.sTafseer.Add(node.InnerText.Replace("\r\n", " ").Replace("&nbsp", " ").Replace(';', ' '));
-				ayaData.sTafseer.Add(Regex.Replace(node.InnerText.Replace("\r\n", " ").Replace("&nbsp", " ").Replace(';', ' '), @"\s+", " "));
+				ayaData.STafseer.Add(Regex.Replace(node.InnerText.Replace("\r\n", " ").Replace("&nbsp", " ").Replace(';', ' '), @"\s+", " "));
 				//sInnerText = Regex.Replace(node.InnerText.Replace("\r\n", " ").Replace("&nbsp", " ").Replace(';', ' '), @"\s+", " ");
 
 			}
 			sb.Clear(); sb2.Clear(); sb3.Clear();
 			iSegmentID = 0;
 			sb3.Append($"\t\t\t\t<tafseer id=\"tafseer_{ayaData.SurahID}.{ayaData.AyaID}\">\n");
-			foreach (var node in ayaData.sTafseer)
+			foreach (string node in ayaData.STafseer)
 			{
 				iSegmentID++;
 				sb.Append($"{node}. "); // For ayaData.Tafseer, Tafseer.txt
@@ -1067,8 +1124,8 @@ namespace ScraperPuppet
 			}
 			#endregion
 
-			ayaData.sIntro = null;
-			ayaData.sTafseer = null;
+			ayaData.SIntro = null;
+			ayaData.STafseer = null;
 			ayaData.IntroSegments = null;
 			ayaData.TafseerSegments = null;
 		}
@@ -1093,7 +1150,7 @@ namespace ScraperPuppet
 				if (sFontText != "")
 				{
 					sFontTexts = sFontText.Replace("&quot;", "").Replace("\r\n", "").Split(';', ':');
-					var iFontIndex = Array.FindIndex(sFontTexts, str => str.Contains("family")) + 1;
+					int iFontIndex = Array.FindIndex(sFontTexts, str => str.Contains("family")) + 1;
 					//Console.WriteLine($"Index of font = {iFontIndex.ToString()} - Font is = {sFontTexts[iFontIndex]}");
 					sFontSize = sFontTexts[1].Replace("pt", "").Trim();
 
@@ -1103,7 +1160,7 @@ namespace ScraperPuppet
 					}
 					else
 					{
-						Console.WriteLine($"ERROR!!! - sFontTexts Index out of range - {sFontTexts.Length.ToString()}");
+						Console.WriteLine($"ERROR!!! - sFontTexts Index out of range - {sFontTexts.Length}");
 						MessageBox.Show("ERROR!!! - sFontTexts Index out of range", "ERROR IN TAFSEER SEGMENT");
 						sFontFamily = sFontTexts[iFontIndex].Trim();
 					}
@@ -1173,7 +1230,7 @@ namespace ScraperPuppet
 		private async Task DisplayPageAsync(string url)
 		{
 			//await new BrowserFetcher().DownloadAsync();
-			List<string> programmerLinks = new List<string>();
+			//List<string> programmerLinks = new List<string>();
 
 			var options = new LaunchOptions()
 			{
@@ -1195,16 +1252,16 @@ namespace ScraperPuppet
 
 			var content = page.GetContentAsync();
 			//var tag1 = await page.QuerySelectorAsync("#surah > option:nth-child(5)");
-			var tag1 = await page.QuerySelectorAsync("#surah > option");
+			//var tag1 = await page.QuerySelectorAsync("#surah > option");
 			//var tags = await page.QuerySelectorAllAsync("#surah > option");
 			var tags = await page.QuerySelectorAllAsync("#surah > option");
-			var tag3 = (await tag1.GetPropertyAsync("value")).RemoteObject.ToString();
+			//string tag3 = (await tag1.GetPropertyAsync("value")).RemoteObject.ToString();
 			//var tag4 = (await tag1.GetPropertyAsync("value")).RemoteObject.Description;
-			var tag5 = (await tag1.GetPropertyAsync("value")).RemoteObject.Type.ToString();
-			var tag6 = (await tag1.GetPropertyAsync("value")).RemoteObject.Value.ToString();
-			var tag7 = (await tag1.GetPropertyAsync("value")).JsonValueAsync().Result.ToString();
-			var tag8 = tag1.JsonValueAsync().Result.ToString();
-			var tag9 = await page.QuerySelectorAllHandleAsync("#surah > option");
+			//string tag5 = (await tag1.GetPropertyAsync("value")).RemoteObject.Type.ToString();
+			//string tag6 = (await tag1.GetPropertyAsync("value")).RemoteObject.Value.ToString();
+			//string tag7 = (await tag1.GetPropertyAsync("value")).JsonValueAsync().Result.ToString();
+			//string tag8 = tag1.JsonValueAsync().Result.ToString();
+			//var tag9 = await page.QuerySelectorAllHandleAsync("#surah > option");
 
 			foreach (var tag in tags)
 			{
@@ -1236,12 +1293,12 @@ namespace ScraperPuppet
 				//await tag.ClickAsync();
 				await page.WaitForNavigationAsync();
 				//tag = await page.QuerySelectorAsync("a.next-parah-o");
-				btn = await page.QuerySelectorAsync("button.btn");
+				//btn = await page.QuerySelectorAsync("button.btn");
 			}
 			//await btn.ClickAsync();
 			//content.RunSynchronously
 			Debug.WriteLine(content.Result);
-			bool result = content.Result.Contains("moreAyaatBtn");
+			//bool result = content.Result.Contains("moreAyaatBtn");
 			// Fill in the email field
 			//await page.TypeAsync("input[id=username]", "doctor_suhaib@hotmail.com");
 
@@ -1439,11 +1496,11 @@ namespace ScraperPuppet
 				/// <summary>
 				/// List of intro paragraphs. Helper data structure.
 				/// </summary>
-				public List<string> sIntro { get; set; }
+				public List<string> SIntro { get; set; }
 				/// <summary>
 				/// List of tafseer paragraphs. Helper data structure.
 				/// </summary>
-				public List<string> sTafseer { get; set; }
+				public List<string> STafseer { get; set; }
 
 				/// <summary>
 				/// List of tafseer segments, Helper data structure.
@@ -1460,8 +1517,8 @@ namespace ScraperPuppet
 
 				public AyaData()
 				{
-					sIntro = new List<string>();
-					sTafseer = new List<string>();
+					SIntro = new List<string>();
+					STafseer = new List<string>();
 					TafseerSegments = new List<(string Data, string Lang, int LangID, string Font, int FontID, string Size)>();
 					IntroSegments = new List<(string Data, string Lang, int LangID, string Font, int FontID, string Size)>();
 					//lTafseer = new List<(string Data, FontFamily Font)>();
